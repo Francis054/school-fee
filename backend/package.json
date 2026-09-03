@@ -3,11 +3,47 @@
   "version": "1.0.0",
   "description": "Backend API for the School Fee Management SaaS",
   "type": "module",
+  
   "scripts": {
     "dev": "tsx watch src/server.ts",
     "build": "tsc",
     "start": "node dist/server.js",
-    "contract:emit": "prisma contract emit"
+    "contract:emit": "prisma contract emit",
+
+    "prisma:init": "npx prisma orm init --target postgres --authoring psl --yes",
+    "prisma:emit": "npx prisma contract emit",
+    "prisma:format": "npx prisma contract format",
+    "prisma:validate": "npx prisma contract validate",
+    
+    "prisma:sign": "npx prisma db sign",
+    "prisma:verify": "npx prisma db verify",
+    "prisma:update": "npx prisma db update",
+    "prisma:update:dry": "npx prisma db update --dry-run",
+    
+    "prisma:migrate": "npx prisma db update --dry-run && npx prisma db update",
+    "prisma:migrate:new": "npx prisma migration new",
+    "prisma:migrate:status": "npx prisma migration status",
+    "prisma:migrate:plan": "npx prisma migration plan",
+    "prisma:migrate:log": "npx prisma migration log",
+    "prisma:migrate:rollback": "npx prisma migration rollback",
+    
+    "prisma:reset": "npx prisma db reset --force",
+    "prisma:reset:full": "rm -rf prisma/migrations prisma/contract.json node_modules/.prisma && npx prisma cache clear && npx prisma contract emit && npx prisma db init && npx prisma db verify",
+    "prisma:reset:clean": "rm -rf prisma/migrations && npx prisma contract emit && npx prisma db init",
+    
+    "prisma:studio": "npx prisma studio",
+    "prisma:inspect": "npx prisma inspect-live-schema",
+    "prisma:version": "npx prisma --version",
+    "prisma:cache:clear": "npx prisma cache clear",
+    
+    "db:setup": "npm run prisma:emit && npm run prisma:sign && npm run prisma:verify",
+    "db:rebuild": "npm run prisma:reset:full && npm run db:setup",
+
+
+    "db:reset-full": "rm -rf prisma/migrations prisma/contract.json node_modules/.prisma && npx prisma cache clear && npx prisma contract emit && npx prisma db init && npx prisma db verify",
+    "db:reset-migrations": "rm -rf prisma/migrations && npx prisma contract emit && npx prisma db init",
+    "db:reset-database": "npx prisma db reset --force && npx prisma db sign",
+    "db:seed": "node prisma/seed.js"
   },
   "keywords": [],
   "author": "",
@@ -22,11 +58,10 @@
     "zod": "^4.4.3"
   },
   "devDependencies": {
-    "@prisma/cli-engine": "^0.2.3",
     "@types/cors": "^2.8.19",
     "@types/express": "^5.0.6",
     "@types/node": "^26.2.0",
-    "prisma": "^8.0.0-rc.10",
+    "prisma": "^8.0.0-rc.8",
     "tsx": "^4.23.12",
     "typescript": "^7.0.2"
   }

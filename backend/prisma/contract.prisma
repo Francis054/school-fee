@@ -1,21 +1,498 @@
 // use prisma-next
-
-model User {
-  id        Int      @id @default(autoincrement())
-  email     String   @unique
-  username  String?
-  name      String?
-  posts     Post[]
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+enum UserStatus {
+  active
+  inactive
+  suspended
 }
 
-model Post {
-  id        Int      @id @default(autoincrement())
-  title     String
-  content   String?
-  author    User     @relation(fields: [authorId], references: [id])
-  authorId  Int
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+enum StudentStatus {
+  active
+  graduated
+  transferred
+  archived
+}
+
+enum GuardianRelationship {
+  father
+  mother
+  guardian
+  uncle
+  aunt
+  grandparent
+  other
+}
+
+enum PaymentStatus {
+  pending
+  completed
+  failed
+  reversed
+}
+
+enum PaymentMethod {
+  cash
+  mobile_money
+  bank_transfer
+}
+
+enum ReceiptStatus {
+  issued
+  cancelled
+}
+
+enum AuditAction {
+  create
+  update
+  delete
+  archive
+  login
+  logout
+  payment
+  payment_reversal
+}
+
+enum FeeStatus {
+  active
+  inactive
+}
+
+enum AcademicYearStatus {
+  active
+  inactive
+  completed
+}
+
+enum TermStatus {
+  active
+  inactive
+  completed
+}
+
+model School {
+  id                 Int                  @id @default(autoincrement())
+  name               String
+  address            String
+  emailAddress       String
+  phoneNumber        String
+  logoUrl            String?
+  currency           String
+  verified           Boolean              @default(false)
+  createdAt          DateTime             @default(now())
+  updatedAt          temporal.updatedAt()
+  deletedAt          DateTime?
+
+  users              UserSchool[]
+  parents            Parent[]
+  students           Student[]
+  classes            Class[]
+  academicYears      AcademicYear[]
+  terms              Term[]
+  enrollments        StudentEnrollment[]
+  feeTypes           FeeType[]
+  feeStructures      FeeStructure[]
+  feeStructureItems  FeeStructureItem[]
+  payments           Payment[]
+  paymentAllocations PaymentAllocation[]
+  receipts           Receipt[]
+  auditLogs          AuditLog[]
+  settings           SchoolSetting[]
+
+  @@map("schools")
+}
+
+model User {
+  id               Int                  @id @default(autoincrement())
+  firstName        String
+  lastName         String
+  emailAddress     String               @unique
+  phoneNumber      String?
+  password         String
+  status           UserStatus           @default(active)
+  createdAt        DateTime             @default(now())
+  updatedAt        temporal.updatedAt()
+  deletedAt        DateTime?
+
+  schools          UserSchool[]
+  receivedPayments Payment[]            @relation("PaymentReceivedBy")
+  issuedReceipts   Receipt[]            @relation("ReceiptIssuedBy")
+  auditLogs        AuditLog[]
+
+  @@index([status])
+  @@map("users")
+}
+
+model Role {
+  id          Int                  @id @default(autoincrement())
+  name        String
+  description String?
+  createdAt   DateTime             @default(now())
+  updatedAt   temporal.updatedAt()
+  deletedAt   DateTime?
+
+  users       UserSchool[]
+
+  @@map("roles")
+}
+
+model UserSchool {
+  id        Int                  @id @default(autoincrement())
+  userId    Int
+  schoolId  Int
+  roleId    Int
+  createdAt DateTime             @default(now())
+  updatedAt temporal.updatedAt()
+  deletedAt DateTime?
+
+  user      User                 @relation(fields:[userId], references:[id])
+  school    School               @relation(fields:[schoolId], references:[id])
+  role      Role                 @relation(fields:[roleId], references:[id])
+
+  @@unique([userId, schoolId])
+  @@index([schoolId])
+  @@index([roleId])
+  @@map("user_school")
+}
+
+model Parent {
+  id                   Int                  @id @default(autoincrement())
+  firstName            String
+  lastName             String
+  otherName            String?
+  phoneNumber          String
+  secondaryPhoneNumber String?
+  emailAddress         String?
+  address              String?
+  relationship         GuardianRelationship
+  schoolId             Int
+  createdAt            DateTime             @default(now())
+  updatedAt            temporal.updatedAt()
+  deletedAt            DateTime?
+
+  school               School               @relation(fields:[schoolId], references:[id])
+  students             StudentParent[]
+  payments             Payment[]
+
+  @@index([schoolId])
+  @@index([phoneNumber])
+  @@map("parents")
+}
+
+model Student {
+  id              Int                  @id @default(autoincrement())
+  admissionNumber String
+  firstName       String
+  middleName      String?
+  lastName        String
+  gender          String
+  dateOfBirth     DateTime?
+  admissionDate   DateTime
+  status          StudentStatus        @default(active)
+  schoolId        Int
+  createdAt       DateTime             @default(now())
+  updatedAt       temporal.updatedAt()
+  deletedAt       DateTime?
+
+  school          School               @relation(fields:[schoolId], references:[id])
+  parents         StudentParent[]
+  enrollments     StudentEnrollment[]
+  payments        Payment[]
+  receipts        Receipt[]
+
+  @@unique([schoolId, admissionNumber])
+  @@index([schoolId])
+  @@index([status])
+  @@map("students")
+}
+
+model StudentParent {
+  id        Int                  @id @default(autoincrement())
+  studentId Int
+  parentId  Int
+  isPrimary Boolean              @default(false)
+  createdAt DateTime             @default(now())
+  updatedAt temporal.updatedAt()
+  deletedAt DateTime?
+
+  student   Student              @relation(fields:[studentId], references:[id])
+  parent    Parent               @relation(fields:[parentId], references:[id])
+
+  @@unique([studentId, parentId])
+  @@index([parentId])
+  @@map("student_parent")
+}
+
+model Class {
+  id            Int                  @id @default(autoincrement())
+  name          String
+  description   String?
+  schoolId      Int
+  createdAt     DateTime             @default(now())
+  updatedAt     temporal.updatedAt()
+  deletedAt     DateTime?
+
+  school        School               @relation(fields:[schoolId], references:[id])
+  enrollments   StudentEnrollment[]
+  feeStructures FeeStructure[]
+
+  @@unique([schoolId, name])
+  @@index([schoolId])
+  @@map("classes")
+}
+
+model AcademicYear {
+  id            Int                  @id @default(autoincrement())
+  name          String
+  startDate     DateTime
+  endDate       DateTime
+  status        AcademicYearStatus   @default(active)
+  schoolId      Int
+  createdAt     DateTime             @default(now())
+  updatedAt     temporal.updatedAt()
+  deletedAt     DateTime?
+
+  school        School               @relation(fields:[schoolId], references:[id])
+  terms         Term[]
+  enrollments   StudentEnrollment[]
+  feeStructures FeeStructure[]
+  payments      Payment[]
+
+  @@unique([schoolId, name])
+  @@index([schoolId])
+  @@index([status])
+  @@map("academic_year")
+}
+
+model Term {
+  id             Int                  @id @default(autoincrement())
+  name           String
+  startDate      DateTime
+  endDate        DateTime
+  status         TermStatus           @default(active)
+  academicYearId Int
+  schoolId       Int
+  createdAt      DateTime             @default(now())
+  updatedAt      temporal.updatedAt()
+  deletedAt      DateTime?
+
+  academicYear   AcademicYear         @relation(fields:[academicYearId], references:[id])
+  school         School               @relation(fields:[schoolId], references:[id])
+  feeStructures  FeeStructure[]
+  payments       Payment[]
+
+  @@unique([academicYearId, name])
+  @@index([schoolId])
+  @@index([academicYearId])
+  @@index([status])
+  @@map("terms")
+}
+
+model StudentEnrollment {
+  id             Int                  @id @default(autoincrement())
+  studentId      Int
+  classId        Int
+  academicYearId Int
+  startDate      DateTime
+  endDate        DateTime?
+  schoolId       Int
+  createdAt      DateTime             @default(now())
+  updatedAt      temporal.updatedAt()
+  deletedAt      DateTime?
+
+  student        Student              @relation(fields:[studentId], references:[id])
+  class          Class                @relation(fields:[classId], references:[id])
+  academicYear   AcademicYear         @relation(fields:[academicYearId], references:[id])
+  school         School               @relation(fields:[schoolId], references:[id])
+
+  @@unique([studentId, academicYearId])
+  @@index([schoolId])
+  @@index([classId])
+  @@index([academicYearId])
+  @@map("student_enrollment")
+}
+
+model FeeType {
+  id             Int                  @id @default(autoincrement())
+  name           String
+  description    String?
+  status         FeeStatus            @default(active)
+  schoolId       Int
+  createdAt      DateTime             @default(now())
+  updatedAt      temporal.updatedAt()
+  deletedAt      DateTime?
+
+  school         School               @relation(fields:[schoolId], references:[id])
+  structureItems FeeStructureItem[]
+
+  @@unique([schoolId, name])
+  @@index([schoolId])
+  @@index([status])
+  @@map("fee_type")
+}
+
+model FeeStructure {
+  id             Int                  @id @default(autoincrement())
+  classId        Int
+  academicYearId Int
+  termId         Int
+  name           String?
+  schoolId       Int
+  createdAt      DateTime             @default(now())
+  updatedAt      temporal.updatedAt()
+  deletedAt      DateTime?
+
+  class          Class                @relation(fields:[classId], references:[id])
+  academicYear   AcademicYear         @relation(fields:[academicYearId], references:[id])
+  term           Term                 @relation(fields:[termId], references:[id])
+  school         School               @relation(fields:[schoolId], references:[id])
+  items          FeeStructureItem[]
+
+  @@unique([classId, academicYearId, termId])
+  @@index([schoolId])
+  @@index([classId])
+  @@index([academicYearId])
+  @@index([termId])
+  @@map("fee_structure")
+}
+
+model FeeStructureItem {
+  id             Int                  @id @default(autoincrement())
+  feeStructureId Int
+  feeTypeId      Int
+  amount         Int
+  schoolId       Int
+  createdAt      DateTime             @default(now())
+  updatedAt      temporal.updatedAt()
+  deletedAt      DateTime?
+
+  feeStructure   FeeStructure         @relation(fields:[feeStructureId], references:[id])
+  feeType        FeeType              @relation(fields:[feeTypeId], references:[id])
+  school         School               @relation(fields:[schoolId], references:[id])
+  allocations    PaymentAllocation[]
+
+  @@unique([feeStructureId, feeTypeId])
+  @@index([schoolId])
+  @@index([feeStructureId])
+  @@index([feeTypeId])
+  @@map("fee_structure_item")
+}
+
+model Payment {
+  id              Int                  @id @default(autoincrement())
+  studentId       Int
+  parentId        Int?
+  academicYearId  Int
+  termId          Int
+  amount          Int
+  paymentDate     DateTime
+  method          PaymentMethod
+  status          PaymentStatus        @default(pending)
+  referenceNumber String?
+  notes           String?
+  receivedById    Int
+  schoolId        Int
+  createdAt       DateTime             @default(now())
+  updatedAt       temporal.updatedAt()
+  deletedAt       DateTime?
+
+  student         Student              @relation(fields:[studentId], references:[id])
+  parent          Parent?              @relation(fields:[parentId], references:[id])
+  academicYear    AcademicYear         @relation(fields:[academicYearId], references:[id])
+  term            Term                 @relation(fields:[termId], references:[id])
+  receivedBy      User                 @relation("PaymentReceivedBy", fields:[receivedById], references:[id])
+  school          School               @relation(fields:[schoolId], references:[id])
+  allocations     PaymentAllocation[]
+  receipt         Receipt?
+
+  @@index([schoolId])
+  @@index([studentId])
+  @@index([parentId])
+  @@index([academicYearId])
+  @@index([termId])
+  @@index([status])
+  @@index([paymentDate])
+  @@map("payments")
+}
+
+model PaymentAllocation {
+  id                 Int                  @id @default(autoincrement())
+  paymentId          Int
+  feeStructureItemId Int
+  amount             Int
+  schoolId           Int
+  createdAt          DateTime             @default(now())
+  updatedAt          temporal.updatedAt()
+  deletedAt          DateTime?
+
+  payment            Payment              @relation(fields:[paymentId], references:[id])
+  feeStructureItem   FeeStructureItem     @relation(fields:[feeStructureItemId], references:[id])
+  school             School               @relation(fields:[schoolId], references:[id])
+
+  @@index([schoolId])
+  @@index([paymentId])
+  @@index([feeStructureItemId])
+  @@map("payment_allocation")
+}
+
+model Receipt {
+  id            Int                  @id @default(autoincrement())
+  receiptNumber String
+  paymentId     Int                  @unique
+  studentId     Int
+  issuedById    Int
+  issueDate     DateTime
+  status        ReceiptStatus        @default(issued)
+  schoolId      Int
+  createdAt     DateTime             @default(now())
+  updatedAt     temporal.updatedAt()
+  deletedAt     DateTime?
+
+  payment       Payment              @relation(fields:[paymentId], references:[id])
+  student       Student              @relation(fields:[studentId], references:[id])
+  issuedBy      User                 @relation("ReceiptIssuedBy", fields:[issuedById], references:[id])
+  school        School               @relation(fields:[schoolId], references:[id])
+
+  @@unique([schoolId, receiptNumber])
+  @@index([schoolId])
+  @@index([studentId])
+  @@index([issuedById])
+  @@index([status])
+  @@map("receipts")
+}
+
+model AuditLog {
+  id          Int         @id @default(autoincrement())
+  userId      Int?
+  schoolId    Int
+  action      AuditAction
+  tableName   String
+  recordId    Int?
+  description String?
+  ipAddress   String?
+  createdAt   DateTime    @default(now())
+
+  user        User?       @relation(fields:[userId], references:[id])
+  school      School      @relation(fields:[schoolId], references:[id])
+
+  @@index([userId])
+  @@index([schoolId])
+  @@index([action])
+  @@index([tableName, recordId])
+  @@index([createdAt])
+  @@map("audit_log")
+}
+
+model SchoolSetting {
+  id           Int                  @id @default(autoincrement())
+  schoolId     Int
+  settingKey   String
+  settingValue String
+  createdAt    DateTime             @default(now())
+  updatedAt    temporal.updatedAt()
+  deletedAt    DateTime?
+
+  school       School               @relation(fields:[schoolId], references:[id])
+
+  @@unique([schoolId, settingKey])
+  @@index([schoolId])
+  @@map("school_setting")
 }
