@@ -1,10 +1,10 @@
-
-
 import { db } from '../../prisma/db';
-import { SchoolInterface } from './schoolInterface';
+import { CreateSchoolDto } from './dtos/createSchoolDto';
+import { UpdateSchoolDto } from './dtos/updateSchoolDto';
+
 
 export class SchoolRepository {
-  async create(data: SchoolInterface) {
+  async create(data: CreateSchoolDto) {
     return db.orm.public.School.create({
       name: data.name,
       address: data.address,
@@ -31,17 +31,14 @@ export class SchoolRepository {
     return db.orm.public.School.where({
       deletedAt: null,
     })
-      .orderBy((school) => school.createdAt.desc())
+      .orderBy((school) => school.createdAt.asc())
       .all();
   }
 
-  async update(id: number, data: Partial<SchoolInterface>) {
+  async update(id: number, data: Partial<UpdateSchoolDto>) {
     return db.orm.public.School.where({ id }).update(data);
   }
-
-  async softDelete(id: number) {
-    return db.orm.public.School.where({ id }).update({
-      deletedAt: new Date(),
-    });
+  async delete(id: number) {
+    return db.orm.public.School.where({ id }).delete();
   }
 }

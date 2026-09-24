@@ -1,6 +1,8 @@
 import express from "express";
 import cors from "cors";
 import helmet from "helmet";
+import schoolRoutes from './modules/school/schoolRoutes';
+import { ErrorMiddleware } from './middleware/errorMiddleware';
 
 const app = express();
 
@@ -20,5 +22,10 @@ app.get("/api/v1/health", (_req, res) => {
     message: "School Fee Management API is running",
   });
 });
+
+
+app.use('/api/schools', schoolRoutes);
+
+app.use(ErrorMiddleware.handle);
 
 export default app;
