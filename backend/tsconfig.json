@@ -3,6 +3,7 @@
     "target": "ES2022",
     "module": "preserve",
     "moduleResolution": "bundler",
+
     "outDir": "./dist",
     "rootDir": "./src",
 
@@ -11,11 +12,12 @@
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
 
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true,
+
     "sourceMap": true,
     "resolveJsonModule": true,
-    "types": [
-      "node"
-    ]
+    "types": ["node"]
   },
   "include": ["src/**/*"],
   "exclude": ["node_modules", "dist", "tests"]
