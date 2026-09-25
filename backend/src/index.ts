@@ -3,6 +3,7 @@ import cors from "cors";
 import helmet from "helmet";
 import schoolRoutes from './modules/school/schoolRoutes';
 import { ErrorMiddleware } from './middleware/errorMiddleware';
+import userRouter from "./modules/user/userRoutes";
 
 const app = express();
 
@@ -24,7 +25,8 @@ app.get("/api/v1/health", (_req, res) => {
 });
 
 
-app.use('/api/schools', schoolRoutes);
+app.use('/api/v1/schools', schoolRoutes);
+app.use('/api/v1/users', userRouter);
 
 app.use(ErrorMiddleware.handle);
 
