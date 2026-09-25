@@ -3,6 +3,7 @@ import cors from 'cors';
 import helmet from 'helmet';
 
 import { ErrorMiddleware } from './middleware/errorMiddleware';
+
 import schoolRoutes from './modules/school/schoolRoutes';
 import userRouter from './modules/user/userRoutes';
 
@@ -25,10 +26,11 @@ app.get('/api/v1/health', (_req, res) => {
   });
 });
 
-//  My route Handle
+// Routes
 app.use('/api/v1/schools', schoolRoutes);
 app.use('/api/v1/users', userRouter);
 
+// Global error middleware
 app.use(ErrorMiddleware.handle);
 
 export default app;
