@@ -1,9 +1,11 @@
-import express from "express";
-import cors from "cors";
-import helmet from "helmet";
-import schoolRoutes from './modules/school/schoolRoutes';
+import express from 'express';
+import cors from 'cors';
+import helmet from 'helmet';
+
 import { ErrorMiddleware } from './middleware/errorMiddleware';
-import userRouter from "./modules/user/userRoutes";
+
+import schoolRoutes from './modules/school/schoolRoutes';
+import userRouter from './modules/user/userRoutes';
 
 const app = express();
 
@@ -17,17 +19,18 @@ app.use(cors());
 app.use(express.json());
 
 // Health check route
-app.get("/api/v1/health", (_req, res) => {
+app.get('/api/v1/health', (_req, res) => {
   res.status(200).json({
     success: true,
-    message: "School Fee Management API is running",
+    message: 'School Fee Management API is running',
   });
 });
 
-
+// Routes
 app.use('/api/v1/schools', schoolRoutes);
 app.use('/api/v1/users', userRouter);
 
+// Global error middleware
 app.use(ErrorMiddleware.handle);
 
 export default app;

@@ -1,8 +1,4 @@
-import {
-  NextFunction,
-  Request,
-  Response,
-} from 'express';
+import { NextFunction, Request, Response } from 'express';
 
 import { AppError } from '../errors/AppError';
 
@@ -15,14 +11,13 @@ export class ErrorMiddleware {
   ) {
     console.error(error);
 
-    // Our expected application errors
     if (error instanceof AppError) {
       return res.status(error.statusCode).json({
         message: error.message,
+        ...(error.details ? { errors: error.details } : {}),
       });
     }
 
-    // Unexpected errors
     return res.status(500).json({
       message: 'Internal server error',
     });
