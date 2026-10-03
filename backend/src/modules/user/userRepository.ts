@@ -3,7 +3,7 @@ import { UpdateSchoolDto } from '../school/dtos/updateSchoolDto';
 import { CreateUserDto } from './dtos/createUserDto';
 
 export class UserRepository {
-  async create(data: CreateUserDto) {
+  async create(data: Omit<CreateUserDto, 'confirmedPassword'>) {
     return db.orm.public.User.create({
       firstName: data.firstName,
       lastName: data.lastName,
