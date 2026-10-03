@@ -1,5 +1,4 @@
 import { db } from '../../prisma/db';
-import { UpdateSchoolDto } from '../school/dtos/updateSchoolDto';
 import { CreateUserDto } from './dtos/createUserDto';
 
 export class UserRepository {
@@ -32,7 +31,7 @@ export class UserRepository {
       .all();
   }
 
-  async update(id: number, data: Partial<UpdateSchoolDto>) {
+  async update(id: number, data: Partial<CreateUserDto>) {
     return db.orm.public.User.where({ id }).update(data);
   }
   async delete(id: number) {
